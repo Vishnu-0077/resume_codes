@@ -1,0 +1,22 @@
+[
+  {"question": "What is the methodology?", "expected_route": "TEXT"},
+  {"question": "Summarize the introduction.", "expected_route": "TEXT"},
+  {"question": "What are the main limitations of this approach?", "expected_route": "TEXT"},
+  {"question": "Explain the proposed architecture in words.", "expected_route": "TEXT"},
+  {"question": "What related work is discussed?", "expected_route": "TEXT"},
+  {"question": "What is accuracy in Table 2?", "expected_route": "TABLE"},
+  {"question": "Which model has the highest F1 score?", "expected_route": "TABLE"},
+  {"question": "List the metrics in the results table.", "expected_route": "TABLE"},
+  {"question": "What does the ablation table show?", "expected_route": "TABLE"},
+  {"question": "Compare the numeric rows in Table 1.", "expected_route": "TABLE"},
+  {"question": "What does Figure 3 show?", "expected_route": "IMAGE"},
+  {"question": "Describe the diagram on the architecture page.", "expected_route": "IMAGE"},
+  {"question": "What is illustrated in Figure 1?", "expected_route": "IMAGE"},
+  {"question": "Explain the visual in Figure 4.", "expected_route": "IMAGE"},
+  {"question": "What does the illustration suggest?", "expected_route": "IMAGE"},
+  {"question": "Compare Table 2 and Figure 3", "expected_route": "MULTIMODAL"},
+  {"question": "How do the results table and the figure support the same claim?", "expected_route": "MULTIMODAL"},
+  {"question": "Use Figure 2 and the metrics table to explain performance.", "expected_route": "MULTIMODAL"},
+  {"question": "Why does Figure 4 support the conclusion?", "expected_route": "IMAGE"},
+  {"question": "Relate the chart trends to the tabular scores.", "expected_route": "MULTIMODAL"}
+]

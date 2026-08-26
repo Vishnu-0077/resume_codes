@@ -1,6 +1,6 @@
-# PDF Explainer Chat App
+# PDF Insight — Multimodal RAG Chat App
 
-Upload a text-based PDF and get a structured explanation from Gemini. This small Version 1 app runs entirely on your computer; it does not use Docker, RAG, a database, or a separate frontend server.
+Upload one or two PDFs and ask grounded questions. The assistant retrieves **text + tables + figures** as an evidence bundle, answers with **page-level citations**, checks weak evidence, and keeps everything **in RAM only** (no Docker, no database, no uploaded-file cache).
 
 ## Run it locally
 
@@ -11,15 +11,13 @@ Upload a text-based PDF and get a structured explanation from Gemini. This small
    source .venv/bin/activate
    ```
 
-   On Windows PowerShell, activate it with `.venv\Scripts\Activate.ps1`.
-
-2. Install the dependencies:
+2. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey). Copy `.env.example` to `.env`, then replace `your_gemini_key_here` with that key. Do not commit `.env`.
+3. Copy `.env.example` to `.env` and set a free [Google AI Studio](https://aistudio.google.com/app/apikey) key.
 
 4. Start the app:
 
@@ -27,27 +25,55 @@ Upload a text-based PDF and get a structured explanation from Gemini. This small
    uvicorn main:app --reload
    ```
 
-5. Open http://127.0.0.1:8000 in your browser, choose a PDF, and send an optional instruction. The app keeps that PDF in local server memory for the current browser chat, so later questions do not need another upload. Uploading another PDF replaces it. Restarting the server or refreshing the browser starts a new chat.
+5. Open http://127.0.0.1:8000
 
-Scanned PDFs need OCR before they can be explained because this Version 1 extracts only selectable PDF text.
+Refreshing the browser or restarting the server clears the in-memory index. That is intentional.
 
-The app uses `gemini-3.6-flash` through Gemini's free tier and does not enable billing-only tools such as Google Search grounding. It sends up to 500,000 extracted PDF characters per request. This avoids failures with exceptionally large PDFs while allowing far more text than the earlier 60,000-character limit. Free-tier use has rate limits; if you reach one, wait for the quota to reset instead of enabling billing.
-
-## Multimodal RAG, agent, and evaluation
-
-Each uploaded PDF follows this in-memory pipeline:
+## Architecture
 
 ```
-PDF → text chunks / detected tables / small embedded figures
-    → Gemini Embedding 2 vectors → in-memory cosine vector store
-    → query-routing agent → text/table/image retrieval
-    → Gemini multimodal answer → charts, citations, and RAG evaluation
+USER → FastAPI
+        → Document ingestion (text / structured tables / figures; OCR if scanned)
+        → Multimodal embeddings (Gemini Embedding 2)
+        → In-memory vector store
+        → Query analyzer → modality planner → retrieve → evidence bundle
+        → Gemini answer → citation rewrite → evidence checker
+        → Confidence + charts + sources → browser
 ```
 
-There is no Docker, disk-backed vector database, local embedding model, or uploaded-file cache. The extracted content, figure bytes, vectors, and chat history reside only in RAM and disappear when the server restarts. To keep memory use modest, a document is capped at 500,000 text characters, 120 text chunks, 20 tables, 8 supported figures, and 2 MB of extracted figure data.
+Ephemeral in-memory retrieval minimizes infrastructure and persistent document storage, while sacrificing persistence and horizontal scalability.
 
-The routing agent selects text RAG by default, adds table RAG for data-oriented questions, and adds image RAG for questions about figures, diagrams, or visuals. Answers list the retrieved PDF sources they cite and show a lightweight grounding evaluation based on retrieval strength and citation coverage.
+## What you get
 
-## Chat and charts
+| Capability | Behavior |
+|---|---|
+| Cross-modal evidence bundles | A figure hit also pulls caption + same-page text/tables |
+| Page-grounded citations | `[S3]` becomes `[Table 3, Page 12]`; click jumps to the source card |
+| Document-only toggle | Strict PDF grounding, or PDF + clearly separated general knowledge |
+| Research mode | Related sections, evidence focus, follow-ups |
+| Document comparison | PDF A + PDF B → comparison agent over both indexes |
+| Structured tables | Markdown + header/row data; charts prefer real table numbers |
+| Scanned PDFs | In-memory OCR via Gemini vision when selectable text is missing |
+| Confidence panel | Evidence strength, pages, retrieval confidence; abstain when weak |
+| Evidence checker | Flags numeric claims not present in retrieved evidence |
+| Observability | `/metrics` and `/health` record latency/route/citation stats (never document text) |
+| Evaluation | 60 probe questions, routing benchmark, adversarial suite at `/eval/offline` |
 
-The app retains the eight most recent user/assistant entries for the current browser session, which makes questions such as “explain that more simply” work naturally. Gemini is asked to create at most two bar or line chart specifications only when the retrieved PDF sources contain clear, explicit numerical data. The browser renders those charts locally as SVG; it never calls a charting service or makes up data.
+## Useful endpoints
+
+- `POST /explain` — ingest / ask (fields: `file`, optional `file_b`, `message`, `session_id`, `answer_mode`, `research_mode`)
+- `GET /health` — liveness + metric snapshot
+- `GET /metrics` — request latency, routes, citation proxy
+- `GET /eval/offline` — routing accuracy + adversarial handling (no PDF upload)
+
+## Evaluation (resume-ready)
+
+```bash
+curl -s http://127.0.0.1:8000/eval/offline | python -m json.tool
+```
+
+The harness measures **agent routing accuracy**, **adversarial handling**, and defines retrieval/generation/citation metrics for document-specific runs (`evaluation/evaluation_dataset.json`).
+
+## Caps (free-tier friendly)
+
+500,000 text characters · 120 chunks · 20 tables · 8 figures · 2 MB figure bytes · OCR on up to 12 scanned pages. History keeps the last 8 turns in RAM.
