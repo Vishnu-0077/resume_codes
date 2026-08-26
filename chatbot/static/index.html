@@ -8,14 +8,21 @@
   </head>
   <body>
     <main class="app-shell">
-      <header><h1>PDF Explainer</h1><p>Upload a PDF and ask anything about it.</p></header>
+      <header>
+        <div class="brand-row"><div><h1>PDF Insight</h1><p>Explore a document, ask follow-ups, and visualize its data.</p></div><span id="document-status" class="document-status" hidden></span></div>
+        <div class="quick-actions" aria-label="Suggested prompts">
+          <button type="button" data-prompt="Give me a detailed, section-by-section explanation.">Explain deeply</button>
+          <button type="button" data-prompt="What are the most important ideas and why do they matter?">Key ideas</button>
+          <button type="button" data-prompt="Create a short quiz to test my understanding.">Quiz me</button>
+        </div>
+      </header>
       <section id="chat" class="chat" aria-live="polite">
-        <article class="message assistant"><p>Hi! Attach a text-based PDF once, then ask follow-up questions without uploading it again.</p></article>
+        <article class="message assistant"><p>Hi! Attach a text-based PDF once, then ask follow-up questions without uploading it again. I’ll create charts only when the document has useful numerical data.</p></article>
       </section>
       <form id="chat-form" class="composer">
         <div id="file-chip" class="file-chip" hidden><span id="file-name"></span><button type="button" id="remove-file" aria-label="Remove selected PDF">×</button></div>
         <div class="controls">
-          <input id="message" type="text" placeholder="Ask a question or leave blank to explain…" autocomplete="off" />
+          <input id="message" type="text" placeholder="Ask about the current document…" autocomplete="off" />
           <input id="file" type="file" accept="application/pdf,.pdf" hidden />
           <label class="upload-button" for="file">📎 Upload PDF</label>
           <button id="send" type="submit">Send</button>
