@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Explainer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header><h1>PDF Explainer</h1><p>Upload a PDF and ask anything about it.</p></header>
+      <section id="chat" class="chat" aria-live="polite">
+        <article class="message assistant"><p>Hi! Attach a text-based PDF once, then ask follow-up questions without uploading it again.</p></article>
+      </section>
+      <form id="chat-form" class="composer">
+        <div id="file-chip" class="file-chip" hidden><span id="file-name"></span><button type="button" id="remove-file" aria-label="Remove selected PDF">×</button></div>
+        <div class="controls">
+          <input id="message" type="text" placeholder="Ask a question or leave blank to explain…" autocomplete="off" />
+          <input id="file" type="file" accept="application/pdf,.pdf" hidden />
+          <label class="upload-button" for="file">📎 Upload PDF</label>
+          <button id="send" type="submit">Send</button>
+        </div>
+      </form>
+    </main>
+    <script src="/static/script.js"></script>
+  </body>
+</html>
